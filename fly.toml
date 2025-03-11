@@ -1,5 +1,5 @@
 app = "fabs-ai-bi"
-primary_region = "ams"
+primary_region = "fra"
 
 [build]
 dockerfile = "Dockerfile"
