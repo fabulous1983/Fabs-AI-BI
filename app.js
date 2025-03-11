@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("/fetch_schema") // Fetch database schema on page load
+    fetch("https://your-app.up.railway.app/fetch_schema") // Fetch database schema on page load
         .then(res => res.json())
         .then(data => {
             document.getElementById("intro").innerText = data.message;
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             let sqlData = await sqlResponse.json();
-            let graphResponse = await fetch("/generate_graph", {
+            let graphResponse = await fetch("https://your-app.up.railway.app/generate_graph", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ dataset: sqlData.dataset })
