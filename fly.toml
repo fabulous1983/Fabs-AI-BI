@@ -1,0 +1,13 @@
+app = "your-app-name"
+primary_region = "ams"
+
+[build]
+dockerfile = "Dockerfile"
+
+[[services]]
+internal_port = 5000
+protocol = "tcp"
+
+[[services.ports]]
+handlers = ["http"]
+port = 80
