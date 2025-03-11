@@ -1,4 +1,4 @@
-app = "your-app-name"
+app = "fabs-ai-bi"
 primary_region = "ams"
 
 [build]
