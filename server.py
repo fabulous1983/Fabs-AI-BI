@@ -132,5 +132,5 @@ def generate_graph():
 
 if __name__ == "__main__":
     # Set the port based on environment variable (defaults to 8080)
-    port = int(os.getenv("PORT", 8080))
+    port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
