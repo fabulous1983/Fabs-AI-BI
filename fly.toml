@@ -2,12 +2,12 @@ app = "fabs-ai-bi"
 primary_region = "fra"
 
 [build]
-dockerfile = "Dockerfile"
+  dockerfile = "Dockerfile"
 
 [[services]]
-internal_port = 5000
-protocol = "tcp"
+  internal_port = 8080
+  protocol = "tcp"
 
 [[services.ports]]
-handlers = ["http"]
-port = 80
+  handlers = ["http"]
+  port = 80
