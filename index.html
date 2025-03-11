@@ -1,173 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Database Assistant</title>
-    <style>
-        /* General Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
-        }
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #ddd;
-            cursor: not-allowed;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-            margin-bottom: 20px;
-            resize: none;
-        }
-        #chatbox {
-            margin-bottom: 20px;
-        }
-        .output {
-            background-color: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        #graphs {
-            margin-top: 20px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>ChatGPT Agent</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #response {
+      margin-top: 20px;
+      background: #e8e8e8;
+      padding: 10px;
+      border-radius: 4px;
+      min-height: 50px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>AI Database Assistant</h1>
-        
-        <!-- Query Buttons -->
-        <div class="button-container">
-            <button id="initial-query">Fetch Database Schema</button>
-            <button id="kpi-query" disabled>KPI Query</button>
-        </div>
+  <div class="container">
+    <h1>ChatGPT Agent</h1>
+    <input type="text" id="prompt" placeholder="Enter your prompt here">
+    <button id="send">Send</button>
+    <div id="response"></div>
+  </div>
 
-        <!-- Chat Box for Q&A -->
-        <textarea id="chatbox" placeholder="Ask a question about the Microsoft SQL database..." rows="4"></textarea>
-        <button id="send">Send Question</button>
-
-        <!-- Chat Output -->
-        <div id="output" class="output"></div>
-
-        <!-- Graphs Section -->
-        <div id="graphs"></div>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const sendButton = document.getElementById("send");
-            const chatbox = document.getElementById("chatbox");
-            const output = document.getElementById("output");
-            const initialQueryButton = document.getElementById("initial-query");
-            const kpiQueryButton = document.getElementById("kpi-query");
-
-            // Initial Database Schema Fetch
-            initialQueryButton.addEventListener("click", async () => {
-                output.innerHTML = "Fetching database schema...";
-                try {
-                    let response = await fetch("https://fabs-ai-bi.fly.dev/fetch_schema");
-                    let data = await response.json();
-                    output.innerHTML = `<strong>Schema Summary:</strong><br>${data.message}`;
-                    kpiQueryButton.disabled = false; // Enable KPI Query button after schema is fetched
-                } catch (error) {
-                    output.innerHTML = "Error fetching schema. Please try again.";
-                }
-            });
-
-            // Send Chat (For general questions)
-            sendButton.addEventListener("click", async () => {
-                let userMessage = chatbox.value.trim();
-                if (!userMessage) return;
-
-                output.innerHTML = "Sending your question...";
-                try {
-                    let response = await fetch("https://fabs-ai-bi.fly.dev/chat", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: userMessage, chatHistory: "" })
-                    });
-                    let data = await response.json();
-                    output.innerHTML = `<strong>AI Reply:</strong><br>${data.reply}`;
-                } catch (error) {
-                    output.innerHTML = "Error processing your question. Please try again.";
-                }
-            });
-
-            // KPI Query (Creates SQL and Displays Graph)
-            kpiQueryButton.addEventListener("click", async () => {
-                output.innerHTML = "Generating SQL query and fetching results...";
-                try {
-                    let sqlResponse = await fetch("https://fabs-ai-bi.fly.dev/execute_sql", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ chatHistory: "Generate a SQL query to fetch KPIs." })
-                    });
-
-                    let sqlData = await sqlResponse.json();
-                    let graphResponse = await fetch("https://fabs-ai-bi.fly.dev/generate_graph", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ dataset: sqlData.dataset })
-                    });
-
-                    let graphData = await graphResponse.json();
-                    document.getElementById("graphs").innerHTML = `<img src="data:image/png;base64,${graphData.image}" />`;
-                    output.innerHTML = "Graph generated successfully!";
-                } catch (error) {
-                    output.innerHTML = "Error generating SQL or graph. Please try again.";
-                }
-            });
-        });
-    </script>
+  <script>
+    document.getElementById("send").addEventListener("click", function(){
+      var prompt = document.getElementById("prompt").value;
+      document.getElementById("response").innerText = "Loading...";
+      // Change the URL below if your Fly.io domain is different.
+      fetch("https://fabs-ai-bi.fly.dev/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ message: prompt, chatHistory: "" })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("response").innerText = data.reply;
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        document.getElementById("response").innerText = "Error occurred.";
+      });
+    });
+  </script>
 </body>
 </html>
