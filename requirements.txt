@@ -1,5 +1,7 @@
 flask
 flask-cors
-openai==0.28
+openai==0.28.0
 gunicorn
 werkzeug==2.0.3
+pyodbc
+matplotlib
