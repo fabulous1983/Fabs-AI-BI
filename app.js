@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("https://your-app.up.railway.app/fetch_schema") // Fetch database schema on page load
+    fetch("https://focused-nourishment-production.up.railway.app/fetch_schema") // Fetch database schema on page load
         .then(res => res.json())
         .then(data => {
             document.getElementById("intro").innerText = data.message;
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatHistory += `User: ${userMessage}\n`;
         localStorage.setItem("chatHistory", chatHistory);
 
-        let response = await fetch("/chat", {
+        let response = await fetch("https://focused-nourishment-production.up.railway.app/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: userMessage, chatHistory: chatHistory })
@@ -26,14 +26,14 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("chatHistory", chatHistory);
 
         if (userMessage.toLowerCase() === "go") {
-            let sqlResponse = await fetch("/execute_sql", {
+            let sqlResponse = await fetch("https://focused-nourishment-production.up.railway.app/execute_sql", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ chatHistory: chatHistory })
             });
 
             let sqlData = await sqlResponse.json();
-            let graphResponse = await fetch("https://your-app.up.railway.app/generate_graph", {
+            let graphResponse = await fetch("https://focused-nourishment-production.up.railway.app/generate_graph", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ dataset: sqlData.dataset })
