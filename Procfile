@@ -1,1 +1,1 @@
-web: bash startup.sh && python server.py
+web: python server.py
