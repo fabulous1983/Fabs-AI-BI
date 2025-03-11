@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["python310", "unixODBC", "msodbcsql17"]
-
-[phases.build]
-cmds = ["pip install -r requirements.txt"]
-
-[phases.start]
-cmds = ["python server.py"]
