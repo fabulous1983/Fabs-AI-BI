@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Log when the server starts
     logging.debug("Starting the Flask application...")
 
-    # Run the Flask app
+    # Run the Flask app (Only for local testing, Gunicorn should be used in production)
     port = int(os.getenv("PORT", 8080))  # Use the port specified by the environment, default 8080
     logging.debug(f"Running on port {port}...")
     app.run(host="0.0.0.0", port=port, debug=True)  # Running on 0.0.0.0 to allow external access
