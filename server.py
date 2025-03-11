@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import base64
 import io
+import os
 
 app = Flask(__name__)
 
@@ -70,4 +71,5 @@ def generate_graph():
     return jsonify({"image": encoded})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
