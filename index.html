@@ -2,74 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chat with ChatGPT - Debug Version</title>
+  <title>AdventureWorks ChatGPT Demo</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .container {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 600px;
-      width: 100%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 1rem;
-      margin: 10px;
-      width: 80%;
-    }
-    #response {
-      margin-top: 20px;
-      text-align: left;
-      background-color: #e8e8e8;
-      padding: 10px;
-      border-radius: 4px;
-      overflow-wrap: break-word;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #response { margin-top: 20px; white-space: pre-wrap; }
+    #graphImg { margin-top: 20px; max-width: 600px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Chat with ChatGPT</h1>
-    <input type="text" id="prompt" placeholder="Enter your prompt">
-    <button id="sendBtn">Send</button>
-    <div id="response"></div>
-  </div>
+  <h1>AdventureWorks ChatGPT Demo</h1>
+  <p>Type a command: <strong>CREATE</strong>, <strong>FETCH</strong>, <strong>KPI</strong>, or <strong>GRAPH</strong></p>
+  <input type="text" id="prompt" size="60" placeholder="e.g., CREATE: Show me the DB structure">
+  <button id="sendBtn">Send</button>
+  <div id="response"></div>
+  <img id="graphImg" style="display:none;"/>
 
   <script>
-    // Replace with your actual backend URL (Fly.io endpoint)
-    const backendUrl = "https://fabs-ai-bi.fly.dev";
+    const backendUrl = "https://YOUR-APP-NAME.fly.dev"; // Replace with your Fly.io domain
 
     document.getElementById("sendBtn").addEventListener("click", async () => {
       const prompt = document.getElementById("prompt").value.trim();
       if (!prompt) return;
-      
-      document.getElementById("response").innerHTML = "Sending request...";
-      
+
+      document.getElementById("response").innerText = "Sending request...";
+      document.getElementById("graphImg").style.display = "none";
+
       try {
         const res = await fetch(`${backendUrl}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: prompt, chatHistory: "" })
+          body: JSON.stringify({ prompt })
         });
         const data = await res.json();
-        let debugText = "";
-        if (data.debug) {
-          debugText = "<br><strong>Debug Info:</strong><pre>" + JSON.stringify(data.debug, null, 2) + "</pre>";
+        if (data.error) {
+          document.getElementById("response").innerText = "Error: " + data.error;
+          return;
         }
-        document.getElementById("response").innerHTML = `<strong>Reply:</strong> ${data.reply} ${debugText}`;
+        // Display text response
+        document.getElementById("response").innerText = data.reply;
+
+        // If there's a base64 graph image, show it
+        if (data.graph) {
+          document.getElementById("graphImg").src = "data:image/png;base64," + data.graph;
+          document.getElementById("graphImg").style.display = "block";
+        }
       } catch (error) {
-        document.getElementById("response").innerHTML = "Error: " + error;
+        document.getElementById("response").innerText = "Error: " + error;
       }
     });
   </script>
