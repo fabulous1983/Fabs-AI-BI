@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, request, jsonify
 import pyodbc
 import openai
@@ -7,6 +8,8 @@ import base64
 import io
 import os
 
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 app = Flask(__name__)
 
 # OpenAI API Key (store securely)
@@ -15,9 +18,14 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Database connection settings
 DB_CONNECTION = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=sqlservercentralpublic.database.windows.net;DATABASE=AdventureWorks;UID=sqlfamily;PWD=sqlf@mily"
 
+# Max data size (in MB) for queries
+MAX_DATA_SIZE_MB = 100
+
 @app.route("/fetch_schema", methods=["GET"])
 def fetch_schema():
     """Fetch and summarize database schema"""
+    logging.debug("fetch_schema called")
+    
     conn = pyodbc.connect(DB_CONNECTION)
     cursor = conn.cursor()
     cursor.execute("SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS")
@@ -25,13 +33,17 @@ def fetch_schema():
     conn.close()
 
     schema_text = "\n".join([f"{row[0]}: {row[1]}" for row in schema])
-
+    
+    # Log the schema to see what data is fetched
+    logging.debug(f"Fetched schema: {schema_text[:500]}...")  # Only show first 500 characters for readability
+    
     # Ask GPT to summarize the schema
     response = openai.ChatCompletion.create(
         model="gpt-4-turbo",
         messages=[{"role": "user", "content": f"Summarize this database structure: {schema_text}"}]
     )
     
+    logging.debug(f"GPT-3 Schema Response: {response}")
     return jsonify({"message": response["choices"][0]["message"]["content"]})
 
 @app.route("/chat", methods=["POST"])
@@ -40,16 +52,24 @@ def chat():
     data = request.json
     user_message = data.get("message", "")
     chat_history = data.get("chatHistory", "")
+    
+    # Log the incoming request
+    logging.debug(f"User Message: {user_message}")
+    logging.debug(f"Chat History: {chat_history}")
 
-    # Combine user message with previous chat history
     full_message = chat_history + f"\nUser: {user_message}"
 
-    # Send the full message to OpenAI for a response
+    # Log the message that is sent to OpenAI
+    logging.debug(f"Sending to OpenAI: {full_message[:500]}...")  # Only show first 500 characters for readability
+
     response = openai.ChatCompletion.create(
         model="gpt-4-turbo",
         messages=[{"role": "user", "content": full_message}]
     )
 
+    # Log the OpenAI response
+    logging.debug(f"OpenAI Response: {response}")
+    
     return jsonify({"reply": response["choices"][0]["message"]["content"]})
 
 @app.route("/execute_sql", methods=["POST"])
@@ -58,19 +78,36 @@ def execute_sql():
     data = request.json.get("chatHistory", "")
 
     # Ask ChatGPT to generate a SQL query
+    logging.debug(f"Chat History for SQL: {data}")
     response = openai.ChatCompletion.create(
         model="gpt-4-turbo",
         messages=[{"role": "user", "content": f"Generate a SQL query for: {data}"}]
     )
     
     sql_query = response["choices"][0]["message"]["content"]
+    logging.debug(f"Generated SQL Query: {sql_query}")
 
-    # Execute the generated SQL query on the database
-    conn = pyodbc.connect(DB_CONNECTION)
-    df = pd.read_sql(sql_query, conn)
-    conn.close()
+    # Limiting the data fetched from the database
+    try:
+        conn = pyodbc.connect(DB_CONNECTION)
+        logging.debug("Connected to database")
+        df = pd.read_sql(sql_query, conn)
+        
+        # Check if data size exceeds the limit (100MB)
+        data_size = df.memory_usage(deep=True).sum() / (1024 * 1024)  # Convert bytes to MB
+        if data_size > MAX_DATA_SIZE_MB:
+            logging.warning(f"Query result size is {data_size:.2f}MB, exceeding the {MAX_DATA_SIZE_MB}MB limit.")
+            df = df.head(100)  # Limit data to first 100 rows (as an example)
+        
+        conn.close()
+    except Exception as e:
+        logging.error(f"Error executing SQL: {e}")
+        return jsonify({"error": str(e)})
 
-    # Convert the result into a dictionary
+    # Log the dataset size after query execution
+    logging.debug(f"Dataset fetched: {df.head(5)}")  # Log the first 5 rows to verify
+
+    # Return the dataset
     return jsonify({"dataset": df.to_dict()})
 
 @app.route("/generate_graph", methods=["POST"])
@@ -90,6 +127,7 @@ def generate_graph():
     # Encode the graph as base64 to send as a response
     encoded_image = base64.b64encode(buf.read()).decode("utf-8")
 
+    logging.debug("Graph generated and encoded to base64.")
     return jsonify({"image": encoded_image})
 
 if __name__ == "__main__":
